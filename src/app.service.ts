@@ -12,7 +12,7 @@ import * as sharp from 'sharp';
 import { v4 } from 'uuid';
 import { Multipart } from 'fastify-multipart';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { readdirSync, statSync, unlink, unlinkSync } from 'fs';
+import { readdirSync, statSync, existsSync, unlinkSync, mkdirSync } from 'fs';
 import path = require('path');
 @Injectable()
 export class AppService {
@@ -69,6 +69,10 @@ export class AppService {
       optimazedImageList.webp = await this.optimazeWebP(filename, file, zip);
 
       const zipfilename = v4() + filename;
+      const filesDir = path.join(__dirname, '../files/');
+      if (!existsSync(filesDir)) {
+        mkdirSync(filesDir);
+      }
       zip.writeZip(`files/${zipfilename}.zip`);
       optimazedImageList.zipfileName = zipfilename + '.zip';
       return optimazedImageList;
@@ -207,7 +211,11 @@ export class AppService {
   @Cron(CronExpression.EVERY_10_MINUTES)
   RemoveUnDownloadedFiles() {
     this.logger.log('Cron Job RemoveUnDownloadedFiles started');
-    const files = readdirSync(path.join(__dirname, '../files/'));
+    const filesDir = path.join(__dirname, '../files/');
+    if (!existsSync(filesDir)) {
+      mkdirSync(filesDir);
+    }
+    const files = readdirSync(filesDir);
     files.forEach(element => {
       const filePath = path.join(__dirname, '../files', element);
       const fileCreationTime = new Date(statSync(filePath).birthtime).valueOf();
