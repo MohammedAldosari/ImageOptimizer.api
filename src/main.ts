@@ -8,6 +8,9 @@ import { AppModule } from './app.module';
 import * as helmet from 'fastify-helmet';
 import fmp = require('fastify-multipart');
 
+import compression from 'fastify-compress';
+import rateLimit from 'fastify-rate-limit';
+
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
@@ -35,6 +38,9 @@ async function bootstrap() {
       },
     });
 
+  // somewhere in your initialization file
+  app.register(compression);
+
   // If you are not going to use CSP at all, you can use this:
   app
     .getHttpAdapter()
@@ -45,7 +51,17 @@ async function bootstrap() {
   app
     .getHttpAdapter()
     .getInstance()
-    .register(fmp);
+    .register(rateLimit, {
+      max: 60,
+      timeWindow: '1 minute',
+    });
+  app.enableCors();
+  app
+    .getHttpAdapter()
+    .getInstance()
+    .register(fmp, {
+      attachFieldsToBody: true,
+    });
 
   await app.listen(3000);
 }
