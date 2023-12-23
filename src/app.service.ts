@@ -1,34 +1,33 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import AdmZip = require('adm-zip');
-import fastify = require('fastify');
 import {
   AppResponseDto,
   OptimazedImageList,
   OptimazedImageResponseDto,
 } from './AppResponseDto';
-import * as sharp from 'sharp';
+import sharp from 'sharp';
 
 import { v4 } from 'uuid';
-import { Multipart } from 'fastify-multipart';
+
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { readdirSync, statSync, existsSync, unlinkSync, mkdirSync } from 'fs';
-import path = require('path');
+import { join } from 'path';
+import AdmZip from 'adm-zip';
+import { FastifyRequest, FastifyReply } from 'fastify';
 @Injectable()
 export class AppService {
   private readonly logger = new Logger(AppService.name);
   // upload
-  async upload(body: unknown, res: fastify.FastifyReply<any>): Promise<any> {
+  async upload(req: FastifyRequest, res: FastifyReply<any>): Promise<any> {
     //Check request is multipart
 
     try {
-      const data: Multipart = body[Object.keys(body)[0]];
-
-      const buffer = await data.toBuffer();
+      const file = await req.file();
+      const buffer = await file.toBuffer();
       const optimazedImageList = await this.filehandler(
         buffer,
-        data.filename,
-        data.mimetype,
+        file.filename,
+        file.mimetype,
       );
       const optimazedImageResponseDto: OptimazedImageResponseDto = {
         fileName: optimazedImageList.zipfileName,
@@ -69,7 +68,7 @@ export class AppService {
       optimazedImageList.webp = await this.optimazeWebP(filename, file, zip);
 
       const zipfilename = v4() + filename;
-      const filesDir = path.join(__dirname, '../files/');
+      const filesDir = join(__dirname, '../files/');
       if (!existsSync(filesDir)) {
         mkdirSync(filesDir);
       }
@@ -86,15 +85,9 @@ export class AppService {
     file: Buffer,
     zip: AdmZip,
   ): Promise<string[]> {
-    const p1 = sharp(file)
-      .resize(480)
-      .jpeg()
-      .toBuffer();
+    const p1 = sharp(file).resize(480).jpeg().toBuffer();
 
-    const p2 = sharp(file)
-      .resize(767)
-      .jpeg()
-      .toBuffer();
+    const p2 = sharp(file).resize(767).jpeg().toBuffer();
 
     const p11 = await p1;
     const p22 = await p2;
@@ -113,15 +106,9 @@ export class AppService {
     file: Buffer,
     zip: AdmZip,
   ): Promise<string[]> {
-    const p1 = sharp(file)
-      .resize(480)
-      .png()
-      .toBuffer();
+    const p1 = sharp(file).resize(480).png().toBuffer();
 
-    const p2 = sharp(file)
-      .resize(767)
-      .png()
-      .toBuffer();
+    const p2 = sharp(file).resize(767).png().toBuffer();
 
     const p11 = await p1;
     const p22 = await p2;
@@ -140,17 +127,9 @@ export class AppService {
     file: Buffer,
     zip: AdmZip,
   ): Promise<string[]> {
-    const t1 = sharp(file)
-      .resize(480)
-      .webp()
-      .toBuffer();
-    const t2 = sharp(file)
-      .resize(767)
-      .webp()
-      .toBuffer();
-    const t3 = sharp(file)
-      .webp()
-      .toBuffer();
+    const t1 = sharp(file).resize(480).webp().toBuffer();
+    const t2 = sharp(file).resize(767).webp().toBuffer();
+    const t3 = sharp(file).webp().toBuffer();
     const t11 = await t1;
     const t22 = await t2;
     const t33 = await t3;
@@ -211,13 +190,13 @@ export class AppService {
   @Cron(CronExpression.EVERY_10_MINUTES)
   RemoveUnDownloadedFiles() {
     this.logger.log('Cron Job RemoveUnDownloadedFiles started');
-    const filesDir = path.join(__dirname, '../files/');
+    const filesDir = join(__dirname, '../files/');
     if (!existsSync(filesDir)) {
       mkdirSync(filesDir);
     }
     const files = readdirSync(filesDir);
-    files.forEach(element => {
-      const filePath = path.join(__dirname, '../files', element);
+    files.forEach((element) => {
+      const filePath = join(__dirname, '../files', element);
       const fileCreationTime = new Date(statSync(filePath).birthtime).valueOf();
       const currentTime = new Date().valueOf();
       const differenceInMS = currentTime - fileCreationTime;

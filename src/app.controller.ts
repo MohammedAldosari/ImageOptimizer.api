@@ -8,14 +8,15 @@ import {
   Req,
   Res,
 } from '@nestjs/common';
-import fastify = require('fastify');
-import { Multipart } from 'fastify-multipart';
+import { FastifyReply, FastifyRequest } from 'fastify';
+
 import { createReadStream, promises } from 'fs';
-import path = require('path');
-import { AppService } from './app.service';
+
 import { AppResponseDto } from './AppResponseDto';
-import * as FileType from 'file-type';
-import * as sizeOf from 'buffer-image-size';
+
+import sizeOf from 'buffer-image-size';
+import { AppService } from './app.service';
+import { join } from 'path';
 
 @Controller()
 export class AppController {
@@ -24,28 +25,28 @@ export class AppController {
 
   @Post('/upload')
   async upload(
-    @Req() req: fastify.FastifyRequest,
-    @Res() res: fastify.FastifyReply<any>,
+    @Req() req: FastifyRequest,
+    @Res() res: FastifyReply<any>,
   ): Promise<any> {
     if (await this.validateRequest(req, res))
-      return await this.appService.upload(req.body, res);
+      return await this.appService.upload(req, res);
   }
 
   @Get('/download/:filename')
   @Header('Content-Type', 'application/zip')
   async download(
     @Param('filename') filename: string,
-    @Res() res: fastify.FastifyReply<any>,
+    @Res() res: FastifyReply<any>,
   ) {
-    const data = createReadStream(path.join(__dirname, '../files', filename));
+    const data = createReadStream(join(__dirname, '../files', filename));
     res.header('Content-Disposition', 'attachment; filename=' + filename);
-    await promises.unlink(path.join(__dirname, '../files', filename));
+    await promises.unlink(join(__dirname, '../files', filename));
     return await res.type('application/zip').send(data);
   }
 
   private async validateRequest(
-    @Req() req: fastify.FastifyRequest,
-    @Res() res: fastify.FastifyReply<any>,
+    @Req() req: FastifyRequest,
+    @Res() res: FastifyReply<any>,
   ): Promise<boolean> {
     if (!req.isMultipart()) {
       res.send(
@@ -81,12 +82,13 @@ export class AppController {
       );
       return false;
     }
-    const data: Multipart = body[Object.keys(body)[0]];
+    const data = await req.file();
 
     const buffer = await data.toBuffer();
 
     // check the file type
-    const result = await FileType.fromBuffer(buffer);
+    const { fileTypeFromBuffer } = await import('file-type');
+    const result = await fileTypeFromBuffer(buffer);
     if (
       !result ||
       !AppController.accptedImageType.includes(result.ext.toLowerCase())

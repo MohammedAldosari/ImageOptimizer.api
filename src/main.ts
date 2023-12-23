@@ -5,11 +5,7 @@ import {
 } from '@nestjs/platform-fastify';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import * as helmet from 'fastify-helmet';
-import fmp = require('fastify-multipart');
-
-import compression from 'fastify-compress';
-import rateLimit from 'fastify-rate-limit';
+import helmet from '@fastify/helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -39,29 +35,20 @@ async function bootstrap() {
     });
 
   // somewhere in your initialization file
-  app.register(compression);
+  app.register(import('@fastify/compress'));
 
   // If you are not going to use CSP at all, you can use this:
-  app
-    .getHttpAdapter()
-    .getInstance()
-    .register(helmet, {
-      contentSecurityPolicy: false,
-    });
-  app
-    .getHttpAdapter()
-    .getInstance()
-    .register(rateLimit, {
-      max: 60,
-      timeWindow: '1 minute',
-    });
+  app.getHttpAdapter().getInstance().register(helmet, {
+    contentSecurityPolicy: false,
+  });
+  app.getHttpAdapter().getInstance().register(import('@fastify/rate-limit'), {
+    max: 60,
+    timeWindow: '1 minute',
+  });
   app.enableCors();
-  app
-    .getHttpAdapter()
-    .getInstance()
-    .register(fmp, {
-      attachFieldsToBody: true,
-    });
+  app.getHttpAdapter().getInstance().register(import('@fastify/multipart'), {
+    attachFieldsToBody: true,
+  });
 
   await app.listen(process.env.PORT || 3000, '0.0.0.0');
 }
