@@ -5,15 +5,16 @@ import {
   OptimazedImageList,
   OptimazedImageResponseDto,
 } from './AppResponseDto';
-import sharp from 'sharp';
+import * as sharp from 'sharp';
 
 import { v4 } from 'uuid';
 
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { readdirSync, statSync, existsSync, unlinkSync, mkdirSync } from 'fs';
 import { join } from 'path';
-import AdmZip from 'adm-zip';
+
 import { FastifyRequest, FastifyReply } from 'fastify';
+import * as AdmZip from 'adm-zip';
 @Injectable()
 export class AppService {
   private readonly logger = new Logger(AppService.name);
@@ -22,7 +23,7 @@ export class AppService {
     //Check request is multipart
 
     try {
-      const file = await req.file();
+      const file = await req.body['file'];
       const buffer = await file.toBuffer();
       const optimazedImageList = await this.filehandler(
         buffer,

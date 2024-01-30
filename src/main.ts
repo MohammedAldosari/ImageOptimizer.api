@@ -10,7 +10,7 @@ import helmet from '@fastify/helmet';
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter({ logger: true }),
+    new FastifyAdapter({ logger: true, bodyLimit: 26214400 /*25MB*/ }),
   );
   const options = new DocumentBuilder()
     .setTitle('Image Optimizer API')
@@ -20,33 +20,19 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('swagger', app, document);
 
-  app
-    .getHttpAdapter()
-    .getInstance()
-    .register(helmet, {
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: [`'self'`],
-          styleSrc: [`'self'`, `'unsafe-inline'`],
-          imgSrc: [`'self'`, 'data:', 'validator.swagger.io'],
-          scriptSrc: [`'self'`, `https: 'unsafe-inline'`],
-        },
-      },
-    });
-
   // somewhere in your initialization file
-  app.register(import('@fastify/compress'));
+  await app.register(import('@fastify/compress'));
 
   // If you are not going to use CSP at all, you can use this:
-  app.getHttpAdapter().getInstance().register(helmet, {
+  await app.register(helmet, {
     contentSecurityPolicy: false,
   });
-  app.getHttpAdapter().getInstance().register(import('@fastify/rate-limit'), {
+  await app.register(import('@fastify/rate-limit'), {
     max: 60,
     timeWindow: '1 minute',
   });
   app.enableCors();
-  app.getHttpAdapter().getInstance().register(import('@fastify/multipart'), {
+  await app.register(import('@fastify/multipart'), {
     attachFieldsToBody: true,
   });
 

@@ -14,9 +14,10 @@ import { createReadStream, promises } from 'fs';
 
 import { AppResponseDto } from './AppResponseDto';
 
-import sizeOf from 'buffer-image-size';
+import sizeOf from 'image-size';
 import { AppService } from './app.service';
 import { join } from 'path';
+import { fromBuffer } from 'file-type';
 
 @Controller()
 export class AppController {
@@ -40,22 +41,23 @@ export class AppController {
   ) {
     const data = createReadStream(join(__dirname, '../files', filename));
     res.header('Content-Disposition', 'attachment; filename=' + filename);
+    await res.type('application/zip').send(data);
     await promises.unlink(join(__dirname, '../files', filename));
-    return await res.type('application/zip').send(data);
+    return;
   }
 
   private async validateRequest(
-    @Req() req: FastifyRequest,
+    @Req() req: FastifyRequest<any>,
     @Res() res: FastifyReply<any>,
   ): Promise<boolean> {
-    if (!req.isMultipart()) {
-      res.send(
-        new BadRequestException(
-          new AppResponseDto(400, undefined, 'Request is not multipart'),
-        ),
-      );
-      return;
-    }
+    // if (!req.isMultipart()) {
+    //   res.send(
+    //     new BadRequestException(
+    //       new AppResponseDto(400, undefined, 'Request is not multipart'),
+    //     ),
+    //   );
+    //   return;
+    // }
     const body = req.body;
 
     if (!req.body) {
@@ -82,13 +84,11 @@ export class AppController {
       );
       return false;
     }
-    const data = await req.file();
 
-    const buffer = await data.toBuffer();
+    const buffer = await body['file'].toBuffer();
 
     // check the file type
-    const { fileTypeFromBuffer } = await import('file-type');
-    const result = await fileTypeFromBuffer(buffer);
+    const result = await fromBuffer(buffer);
     if (
       !result ||
       !AppController.accptedImageType.includes(result.ext.toLowerCase())
