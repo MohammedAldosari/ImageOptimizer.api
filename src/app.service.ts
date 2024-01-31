@@ -81,7 +81,7 @@ export class AppService {
     }
   }
 
-  async optimazePNG(
+  async optimazeJPG(
     filename: string,
     file: Buffer,
     zip: AdmZip,
@@ -92,17 +92,17 @@ export class AppService {
 
     const p11 = await p1;
     const p22 = await p2;
-    zip.addFile(`${filename}-480.jpg`, p11);
-    zip.addFile(`${filename}-767.jpg`, p22);
-    zip.addFile(`${filename}-full.jpg`, file);
+    zip.addFile(`${filename}/${filename}-480.jpg`, p11);
+    zip.addFile(`${filename}/${filename}-767.jpg`, p22);
+    zip.addFile(`${filename}/${filename}-full.jpg`, file);
     return [
-      `${filename}-480.jpg`,
-      `${filename}-767.jpg`,
-      `${filename}-full.jpg`,
+      `${filename}/${filename}-480.jpg`,
+      `${filename}/${filename}-767.jpg`,
+      `${filename}/${filename}-full.jpg`,
     ];
   }
 
-  async optimazeJPG(
+  async optimazePNG(
     filename: string,
     file: Buffer,
     zip: AdmZip,
@@ -113,13 +113,13 @@ export class AppService {
 
     const p11 = await p1;
     const p22 = await p2;
-    zip.addFile(`${filename}-480.jpg`, p11);
-    zip.addFile(`${filename}-767.jpg`, p22);
-    zip.addFile(`${filename}-full.jpg`, file);
+    zip.addFile(`${filename}/${filename}-480.png`, p11);
+    zip.addFile(`${filename}/${filename}-767.png`, p22);
+    zip.addFile(`${filename}/${filename}-full.png`, file);
     return [
-      `${filename}-480.jpg`,
-      `${filename}-767.jpg`,
-      `${filename}-full.jpg`,
+      `${filename}/${filename}-480.png`,
+      `${filename}/${filename}-767.png`,
+      `${filename}/${filename}-full.png`,
     ];
   }
 
@@ -134,13 +134,13 @@ export class AppService {
     const t11 = await t1;
     const t22 = await t2;
     const t33 = await t3;
-    zip.addFile(`${filename}-480.webp`, t11);
-    zip.addFile(`${filename}-767.webp`, t22);
-    zip.addFile(`${filename}-full.webp`, t33);
+    zip.addFile(`${filename}/${filename}-480.webp`, t11);
+    zip.addFile(`${filename}/${filename}-767.webp`, t22);
+    zip.addFile(`${filename}/${filename}-full.webp`, t33);
     return [
-      `${filename}-480.webp`,
-      `${filename}-767.webp`,
-      `${filename}-full.webp`,
+      `${filename}/${filename}-480.webp`,
+      `${filename}/${filename}-767.webp`,
+      `${filename}/${filename}-full.webp`,
     ];
   }
 
