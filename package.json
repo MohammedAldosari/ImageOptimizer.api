@@ -34,7 +34,7 @@
     "@nestjs/swagger": "^7.1.17",
     "@types/node": "^20.11.0",
     "adm-zip": "^0.5.10",
-    "fastify": "^4.25.2",
+    "fastify": "^4.26.0",
     "file-type": "16.5.4",
     "helmet": "^7.1.0",
     "image-size": "^1.1.0",

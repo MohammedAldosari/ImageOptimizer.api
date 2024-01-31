@@ -25,6 +25,7 @@ RUN pnpm run build
 
 FROM node:21-alpine
 
+RUN npm install -g pnpm
 
 ENV NODE_ENV production
 
@@ -33,8 +34,9 @@ USER node
 WORKDIR /home/nest-app
 
 COPY --from=builder --chown=node:node /home/nest-app/package*.json ./
-COPY --from=builder --chown=node:node /home/nest-app/node_modules ./node_modules/
 COPY --from=builder --chown=node:node /home/nest-app/dist ./dist/
+
+RUN pnpm install --prod
 
 # Expose the port the app runs in
 EXPOSE 3000
